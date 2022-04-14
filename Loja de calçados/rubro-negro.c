@@ -51,6 +51,18 @@ No* move_2_esq_red(No* raiz){
 
 }
 
+No* move_2_dir_red(No* raiz){
+
+    troca_cor(raiz);
+    if(cor(raiz->dir->esq) == red){
+        raiz->dir = rotaciona_direita(raiz->dir);
+        raiz = rotaciona_esquerda(raiz);
+        troca_cor(raiz);
+    }
+    return raiz;
+
+}
+
 int cor(No *raiz){
 
     int aux;
@@ -108,9 +120,9 @@ No* remove_No(No* raiz, int valor){
         }
 
         if(valor == raiz->valor){
-            No* aux = procura_Menor(raiz->dir);
+            No* aux = procura_menor(raiz->dir);
             raiz->valor = aux->valor;
-            raiz->dir = remover_menor(raiz->dir);
+            raiz->dir = remove_menor(raiz->dir);
         }else{
             raiz->dir = remove_No(raiz->dir, valor);
         }
@@ -123,8 +135,142 @@ No* remove_No(No* raiz, int valor){
 
 }
 
-int remove_arv_llrb()
+int consulta_arvore(No* raiz, int valor){
 
+    int flag = 0;
+
+    if(raiz != NULL){
+
+        if(raiz->valor == valor){
+            flag = 1;
+        }
+
+        if(raiz->valor > valor){
+            flag = consulta_arvore(raiz->esq,valor);
+        }else{
+            flag = consulta_arvore(raiz->dir, valor);
+        }
+    }
+
+    return flag;
+}
+
+int remove(No* raiz, int valor){
+
+    int flag = 0;
+
+    if(consulta_arvore(raiz,valor)){
+        No* aux = raiz;
+        raiz = remove_No(aux,valor);
+        if(raiz != NULL){
+            raiz->cor = black;
+            flag = 1;
+        }
+    }
+
+    return flag;
+}
+
+void troca_cor(No* raiz){
+
+    raiz->cor = !raiz->cor;
+    if(raiz->esq != NULL){
+        raiz->esq->cor = !raiz->esq->cor;
+    }
+    if(raiz->dir != NULL){
+        raiz->dir->cor = !raiz->dir->cor;
+    }
+
+}
+
+No* remove_menor(No* raiz){
+
+    int flag = 0;
+
+    if(raiz->esq == NULL){
+        free(raiz);
+        flag = 1;
+    }
+
+    if(!flag){
+
+        if(cor(raiz->esq) == black && cor(raiz->esq->esq) == black){
+            raiz = move_2_esq_red(raiz);
+        }
+    
+        raiz->esq = remove_menor(raiz->esq);
+    
+
+        return balancear(raiz);
+    }
+
+    
+
+}
+
+No* procura_menor(No* raiz){
+
+    No* aux1 = raiz;
+    No* aux2 = raiz->esq;
+
+    while(aux2 != NULL){
+        aux1 = aux2;
+        aux2 = aux2->esq;
+    }
+
+    return aux1;
+
+}
+
+No* insere_no(No* no, int valor, int *flag){
+
+    if(no == NULL){
+        No* novo;
+        novo = (No*)malloc(sizeof(No));
+        novo->valor = valor;
+        novo->cor = red;
+        novo->dir = NULL;
+        novo->esq = NULL;
+        no = novo;
+        *flag = 1;
+
+    }else{
+
+        if(valor < no->valor){
+            no->esq = insere_no(no->esq, valor, flag);
+        }else{
+            no->dir = insere_no(no->dir, valor, flag);
+        }
+
+        if(cor(no->dir) == red && cor(no->esq) == black){
+            no = rotaciona_esquerda(no);
+        }
+        if(cor(no->esq) == red && cor(no->esq->esq) == red){
+            no = rotaciona_direita(no);
+        }
+        if(cor(no->esq) == red && cor(no->dir) == red){
+            troca_cor(no);
+        }
+    }      
+
+    return no;
+
+}
+
+int insere_arv(No* raiz, int valor){
+
+    int flag;
+
+    raiz = insere_no(raiz,valor,&flag);
+    if(raiz != NULL){
+        raiz->cor = black;
+    }
+
+    return flag;
+
+}
+
+    
 
 
 int main(){
