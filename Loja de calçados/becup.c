@@ -15,7 +15,6 @@ struct no{
 
 typedef struct no No;
 
-
 No* alocar(){
     No *aux = (No*) malloc(sizeof(No));
 
@@ -26,25 +25,25 @@ No* alocar(){
 }
 
 
-No* rotaciona_esquerda(No* raiz){
+No* rotaciona_esquerda(No **raiz){
 
-    No* aux = raiz->dir;
+    No* aux = (*raiz)->dir;
 
-    raiz->dir  = aux->esq;
-    aux->esq = raiz;
-    aux->cor = raiz->cor;
-    raiz->cor = RED;
+    (*raiz)->dir  = aux->esq;
+    aux->esq = *raiz;
+    aux->cor = (*raiz)->cor;
+    (*raiz)->cor = RED;
     return aux;
 }
 
-No* rotaciona_direita(No* raiz){
+No* rotaciona_direita(No **raiz){
 
-    No* aux = raiz->esq;
+    No* aux = (*raiz)->esq;
 
-    raiz->esq = aux->dir;
-    aux->dir = raiz;
-    aux->cor = raiz->cor;
-    raiz->cor = RED; 
+    (*raiz)->esq = aux->dir;
+    aux->dir = *raiz;
+    aux->cor = (*raiz)->cor;
+    (*raiz)->cor = RED; 
     return aux;
 
 }
@@ -73,11 +72,11 @@ No* move_2_dir_red(No* raiz){
 
 }
 */
-int cor(No *raiz){
+int cor(No **raiz){
 
     int aux;
 
-    if(raiz->cor == RED){
+    if((*raiz)->cor == RED){
         aux = RED;
     }else{
         aux = BLACK;
@@ -181,14 +180,14 @@ int remove(No* raiz, int valor){
     return flag;
 }
 */
-void troca_cor(No* raiz){
+void troca_cor(No **raiz){
 
-    raiz->cor = !raiz->cor;
-    if(raiz->esq != NULL){
-        raiz->esq->cor = !raiz->esq->cor;
+    (*raiz)->cor = !(*raiz)->cor;
+    if((*raiz)->esq != NULL){
+        (*raiz)->esq->cor = !(*raiz)->esq->cor;
     }
-    if(raiz->dir != NULL){
-        raiz->dir->cor = !raiz->dir->cor;
+    if((*raiz)->dir != NULL){
+        (*raiz)->dir->cor = !(*raiz)->dir->cor;
     }
 
 }
@@ -232,82 +231,60 @@ No* procura_menor(No* raiz){
 
 }
 */
-No* insere_no(No* no, int valor, int *flag){
-    printf("entrou na funcao\n");
-    if(no == NULL){
-        printf("entrou no 1  if\n");
-        No* novo;
-        novo = (No*)malloc(sizeof(No));
-        if(novo == NULL){
-            *flag = 0;
-            return NULL;
-        }
+int insere_no(No **no, int valor){
+
+    int flag = 0;
+
+    if(*no == NULL){
+        No *novo = (No*)malloc(sizeof(No));
         novo->valor = valor;
         novo->cor = RED;
         novo->dir = NULL;
         novo->esq = NULL;
-        *flag = 1;
-        printf("inseriu \n");
-        return novo;
+        *no = novo;
+        flag = 1;
+
+        printf("entrou \n");
         
-
-    }
-
-    if(valor == no->valor){
-        *flag = 0;
-    }else{
-        printf("entrou no else\n");
-        if(valor < no->valor){
-            no->esq = insere_no(no->esq, valor, flag);
-        }else{
-            no->dir = insere_no(no->dir, valor, flag);
-        }
-    }
-
-    printf("conferir\n");
     
-    if(cor(no->dir) == RED && cor(no->esq) == BLACK){
-        no = rotaciona_esquerda(no);
-        printf("rotacao esq\n");
-    }
-    if(cor(no->esq) == RED && cor(no->esq->esq) == RED){
-        no = rotaciona_direita(no);
-        printf("rotacao dir\n");
-    }
-    if(cor(no->esq) == RED && cor(no->dir) == RED){
-        troca_cor(no);
-        printf("troca de cor\n");
-    }
-      
+    }else{
+        
+        
+        if(valor < (*no)->valor){
+            flag = insere_no(&((*no)->esq), valor);
+        }else{
+            flag = insere_no(&((*no)->dir), valor);
+        }
 
-    return no;
-
-}
-
-int insere_arv(No **raiz, int valor){
-
-    int flag;
-
-    (*raiz) = insere_no((*raiz),valor,&flag);
-    if((*raiz) != NULL){
-        (*raiz)->cor = BLACK;
-    }
+        if(cor(&((*no)->dir)) == RED && cor(&((*no)->esq)) == BLACK){
+            no = rotaciona_esquerda(&(*no));
+        }
+        if(cor(&((*no)->esq)) == RED && cor(&((*no)->esq)->esq) == RED){
+            no = rotaciona_direita(&(*no));
+        }
+        if(cor(&((*no)->esq) == RED && cor(&((*no)->dir) == RED)){
+            troca_cor(&(*no));
+        }
+    }      
 
     return flag;
 
 }
 
-void imprimir(No* arvore){//IMPRIMIR ARVORE
 
-    if( arvore != NULL){
 
-        imprimir(arvore->esq);
-        printf("%d ",arvore->valor);
-        imprimir(arvore->dir);
+void imprimir(No *arv){//IMPRIMIR ARVORE
+
+    if( arv != NULL){
+
+        imprimir(arv->esq);
+        printf("%d ",arv->valor);
+        imprimir(arv->dir);
 
     }
 
 }
+
 
 
     
@@ -317,14 +294,12 @@ int main(){
 
     No* arvore = alocar();
 
-    insere_arv(&arvore,200);
-    insere_arv(&arvore,100);
-    insere_arv(&arvore,300);
-    insere_arv(&arvore,50);
-    insere_arv(&arvore,150);
-    insere_arv(&arvore,120);
-
-
+    insere_no(&arvore,200);
+    insere_no(&arvore,100);
+    insere_no(&arvore,300);
+    insere_no(&arvore,50);
+    insere_no(&arvore,150);
+    insere_no(&arvore,120);
     printf("inserido\n");
     
     imprimir(arvore);
