@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+typedef struct calcados cal;
+typedef struct Arv23 Arv;
+typedef struct lista Lis;
 
 struct calcados{
 	int tam, cod, qtd, pos;
@@ -18,10 +23,6 @@ struct lista{
 	int esp; 
 	struct lista *prox;
 };
-
-typedef struct Arv23 Arv;
-typedef struct calcados cal;
-typedef struct lista Lis;
 
 Arv *criaNo(cal Calcado,Arv *FEsq,Arv *FCen,Arv *FDir)
 {
@@ -147,139 +148,291 @@ void imprimir(Arv *Raiz, int in){
   
     if( Raiz != NULL){
 
-    	printf("Info 1 = %d pos = %dfilho = %d \n",Raiz->Info1.cod,Raiz->Info1.pos,in);
+    	printf("Info 1 = %d pos = %d filho = %d \n",Raiz->Info1.cod,Raiz->Info1.pos,in);
     	 if(Raiz->NInfos == 2)
         	printf("Info 2 = %d pos = %d\n",Raiz->Info2.cod,Raiz->Info2.pos);
         imprimir(Raiz->esq,1);
         imprimir(Raiz->cen,2);
         imprimir(Raiz->dir,3);
-
     }
 }
-
-int buscaValor(Arv **Raiz, int valor, Arv **Avo, Arv **Pai, int *filho, int *tio,
-int m1,int m2, Arv ** auxAvo, Arv **auxPai, Arv **Aux){//BUSCAR O No DO NUMERO DADO
-
-	int flag = 0;
-    if(*Raiz != NULL){
-        if((*Raiz)->Info1.cod == valor || (*Raiz)->Info2.cod == valor){
-			*Aux = *Raiz;
-			*filho = m1;
-			*tio = m2;
-			*Pai = *auxPai;
-			*Avo = *auxAvo;
-			flag = 1;
-		}else{
-        	flag = buscaValor(&(*Raiz)->esq,valor,&(*Avo),&(*Pai),filho,tio,1,m1,&(*auxPai),&(*Raiz),&(*Aux));
-        	flag = buscaValor(&(*Raiz)->cen,valor,&(*Avo),&(*Pai),filho,tio,2, m1,&(*auxPai),&(*Raiz),&(*Aux));
-           	flag = buscaValor(&(*Raiz)->dir,valor,&(*Avo),&(*Pai),filho,tio,3,m1,&(*auxPai),&(*Raiz),&(*Aux));
-        }
-    }
-
-	return flag;
+void imprimirInfo(cal Calcado){
+  
+   printf("Informacoes do calcado com cod : %d\n",Calcado.cod);
+   printf("Tamanho = %d\nQuantidade = %d\nPreco = %f\nMarca = %s\nTipo = %s\n",
+   Calcado.tam,Calcado.qtd,Calcado.preco,Calcado.marca,Calcado.tipo );
 }
-
 void InserirLista(Lis *LisEsp, int valor){
 
    Lis *nova = malloc (sizeof (Lis));
    nova->esp = valor;
    nova->prox = LisEsp->prox;
    LisEsp->prox = nova;
+   
 }
 
-int atualizaTxt(cal Calcado, int esc, Lis *LisEsp){
+int buscaValor(Arv **Raiz, int valor, int m1, Arv **Aux, Lis *caminho, int esc){//BUSCAR O No DO NUMERO DADO
+
+	int flag = 0;
+    if(*Raiz != NULL){
+
+		if(esc)
+			InserirLista(caminho,m1);
+
+        if((*Raiz)->Info1.cod == valor || (*Raiz)->Info2.cod == valor){
+			*Aux = *Raiz;
+			flag = 1;	
+		}else{
+			if(valor < (*Raiz)->Info1.cod )
+        		flag = buscaValor(&(*Raiz)->esq,valor,1,&(*Aux),caminho,esc);
+			else{
+				if((*Raiz)->NInfos == 2 && valor > (*Raiz)->Info2.cod && (*Raiz)->Info2.cod != 0)
+        			flag = buscaValor(&(*Raiz)->dir,valor,3,&(*Aux),caminho,esc);
+				else 
+					flag = buscaValor(&(*Raiz)->cen,valor,2,&(*Aux),caminho,esc);
+				} 
+        }
+    }
+
+	return flag;
+}
+
+int atualizaTxt(cal Calcado, int esc){
 	Lis *aux;
 	FILE *pont;
+	char s[200];
+	int i = 1;
 	if(esc == 1){
-		pont = fopen("arquivo_palavra.txt", "r");
+		pont = fopen("arquivo_palavra.txt", "r+");
 		if(pont != NULL){
-			fseek(pont, Calcado.pos, SEEK_SET);
-			fprintf(pont,"%d %d %d %d %d %d",0,0,0,0,0,0);
-			InserirLista(LisEsp,Calcado.pos);
+			i = 1;
+			puts("q");
+			while(  i < Calcado.pos){
+				i++;
+				fgets(s,200, pont);
+				//printf("%d\n",l.cod);
+			}
+			printf("qtd = %d\n",Calcado.qtd);
+			fseek(pont,0,SEEK_CUR);
+			fprintf(pont, "%d %d %d %f %s %s",Calcado.cod,Calcado.tam,Calcado.qtd,Calcado.preco,Calcado.marca,Calcado.tipo );
+			//fscanf(pont, "%d %d %d %f %s %s",&l.cod,&l.tam,&l.qtd,&l.preco,l.marca,l.tipo );
+			
 		}
 	}else{
-		if(LisEsp != NULL){
-			pont = fopen("arquivo_palavra.txt", "r+");
-
-			if(pont != NULL){
-				char s[200];
-				int i = 0;
-				while( (fgets(s, 200, pont)) && i < LisEsp->esp)
-					i++;
-
-				fprintf(pont, "%d %d %d %f %s %s",Calcado.cod,Calcado.tam,Calcado.qtd,Calcado.preco,Calcado.marca,Calcado.tipo );
-				aux = LisEsp;
-				LisEsp = LisEsp->prox;
-				free(aux);
-			}
-			
-		}else{
-			pont = fopen("arquivo_palavra.txt", "a");
-			fprintf(pont, "%d %d %d %f %s %s",Calcado.cod,Calcado.tam,Calcado.qtd,Calcado.preco,Calcado.marca,Calcado.tipo );
-		}
+		pont = fopen("arquivo_palavra.txt", "a");
+		fprintf(pont, "%d %d %d %f %s %s\n",Calcado.cod,Calcado.tam,Calcado.qtd,Calcado.preco,Calcado.marca,Calcado.tipo );
 	}
-
 	fclose(pont);
 }
+Lis* Alocar(){
+	Lis* caminho = malloc (sizeof (Lis));
+   	caminho->prox = NULL;
+	return caminho;
+}
 
+void libera (Lis* lista)
+{
+	Lis* p = lista->prox, *aux;
+	while (p != NULL) {
+		aux = p->prox;
+		free(p); 
+		p = aux;
+	}
+
+}
+
+void imprimirCaminho(Lis *Lista,int valor){
+	Lis *p;
+	printf("Caminho pecorrido: \n");
+	printf("%d ->",valor);
+	for(p = Lista->prox; p != NULL; ){
+			
+		if(p->esp == 1)
+			printf("Esquerda -> ");
+		else if(p->esp ==2)
+			printf("Centro -> ");
+		else if(p->esp == 3)
+			printf("Direita -> ");
+		else
+			printf("Raiz\n\n");
+		//Lis *aux = p;
+		p = p->prox;
+		//free(aux);
+	}
+	
+}
 int menu(){
 	int esc;
-	puts("1 - Gerar arvore");
-	puts("2 - Inserir elemento");
-	puts("2 - Excluir elemento");
-	puts("4 - Buscar elemento unico");
-	puts("5 - Busca varios elementos");
+	puts("1 - Inserir elemento");
+	puts("2 - Vender elemento");
+	puts("3 - Atualizar elemento");
+	puts("4 - Busca varios elementos");
+	puts("5 - Imprimir Infos");
+	puts("6 - Imprimir elementos");
+	puts("0 - Sair");
 	scanf("%d",&esc);
 	return esc;
 }
 
 
+
+
+void liberaArv(Arv* Raiz){
+	if (Raiz != NULL){
+		liberaArv(Raiz->esq); /* libera sae */
+		liberaArv(Raiz->cen);
+		liberaArv(Raiz->dir); /* libera sad */
+		free(Raiz); /* libera raiz */
+	}
+}
+
+
 int main() {
 		
-	Arv *Raiz, *Pai;
+	Arv *Raiz, *Pai,*Aux;
 	cal Calcado, sobe;
 	Raiz = NULL;
 	Pai = NULL;
+	int n, i = 1, valor, vlr, j = 0,v[100]; 
+	double t,t_1;
+	Lis *caminho = Alocar();
+	FILE *pont;		
 
-	//fazer a inserção de elementos
-	FILE *pont = fopen("arquivo_palavra.txt", "r");
+	n = menu();
+
+	pont = fopen("arquivo_palavra.txt", "r");
 	if(pont == NULL)
 		printf("Erro na abertura do arquivo!");
-	int i = 1;
+	
 	while(fscanf(pont, "%d %d %d %f %s %s",&Calcado.cod,&Calcado.tam,&Calcado.qtd,&Calcado.preco,Calcado.marca,Calcado.tipo) != EOF){
 		Calcado.pos = i;
 		insereArv23(Pai,&Raiz,Calcado,&sobe);
 		i++;
+		if(i % 2 == 0){
+			v[j] = Calcado.cod;
+			j++;
+		}
+
 	}
-	//usando fclose para fechar o arquivo
 	fclose(pont);
 
-	/*
-	FILE *pont_arq = fopen("outrapalavra.txt", "w");
-	//testando se o arquivo foi realmente criado
-	if(pont_arq == NULL)
-		printf("Erro na abertura do arquivo!");
+	while(n){
+		Aux = NULL;
+		switch (n){
+		
+		case 1:
+			printf("Para inserir calcado Digite (Apenas caracteres e numeros):\n");
+			printf("Codigo : ");
+			scanf("%d",&Calcado.cod);
+			printf("Tamanho : ");
+			scanf("%d",&Calcado.tam);
+			printf("Quantidade : ");
+			scanf("%d",&Calcado.qtd);
+			printf("Preco : ");
+			scanf("%f",&Calcado.preco);
+			printf("Marca : ");
+			scanf("%s",Calcado.marca);
+			printf("Tipo : ");
+			scanf("%s",Calcado.tipo);
+			/*Calcado.cod = 57480;
+			Calcado.tam = 40;
+			Calcado.qtd = 10;
+			Calcado.preco = 4.56;
+			strcpy(Calcado.marca,"UOL");
+			strcpy(Calcado.tipo,"Kid");*/
+			Calcado.pos = i;
+			i++;
+			insereArv23(Pai,&Raiz,Calcado,&sobe);
+			atualizaTxt(Calcado,2);
+			break;
+		case 2:
+			printf("Digite codigo que deseja vender :");
+			scanf("%d",&valor);
+			buscaValor((&Raiz),valor,0,&Aux,caminho,0);
+			if(Aux != NULL){
+				printf("Quantos calcados deseja vender :");
+				scanf("%d",&vlr);
+				if (vlr <= Aux->Info1.qtd){
+				
+					if((Aux)->Info1.cod == valor){
+						Aux->Info1.qtd -= vlr;
+						atualizaTxt((Aux)->Info1,1);
+					}else{
+						Aux->Info2.qtd -= vlr;
+						atualizaTxt((Aux)->Info2,1);
+					}	
+				}else
+					printf("Produto sem estoque\n");
+			}else
+				printf("Calçado não cadastrado\n");
+		
+			break;
+		case 3:
+			caminho = Alocar();
+			printf("Para atualizar calcado Digite (Apenas caracteres e numeros):\n");
+			printf("Codigo : ");
+			scanf("%d",&Calcado.cod);
+			printf("Tamanho : ");
+			scanf("%d",&Calcado.tam);
+			printf("Quantidade : ");
+			scanf("%d",&Calcado.qtd);
+			printf("Preco : ");
+			scanf("%f",&Calcado.preco);
+			printf("Marca : ");
+			scanf("%s",Calcado.marca);
+			printf("Tipo : ");
+			scanf("%s",Calcado.tipo);
+			buscaValor((&Raiz),Calcado.cod,0,&Aux,caminho,0);
+			if(Aux != NULL){
+				if((Aux)->Info1.cod == valor){
+					atualizaTxt((Aux)->Info1,1);
+				}else{
+					atualizaTxt((Aux)->Info2,1);
+				}
+			}
 
+			break;
+		case 4:
+			printf("Quantas numeros deseja pesquisa (1 - 60):\n");
+			scanf("%d",&valor);
+			t_1 = clock();
+			for(j = 0; j < valor; j ++){
+				buscaValor((&Raiz),v[j],0,&Aux,caminho,1);
+				imprimirCaminho(caminho,v[j]);
 
-	fprintf(pont_arq, "%d %d %d %f %s %s",Calcado.cod,Calcado.tam,Struc.qtd,Struc.preco,Struc.marca,Struc.tipo );
-	fprintf(pont_arq, "%d %d %d %f %s %s",Struc.cod,Struc.tam,Struc.qtd,Struc.preco,Struc.marca,Struc.tipo );
-	fprintf(pont_arq, "%d %d %d %f %s %s",Struc.cod,Struc.tam,Struc.qtd,Struc.preco,Struc.marca,Struc.tipo );
-	fprintf(pont_arq, "%d %d %d %f %s %s",Struc.cod,Struc.tam,Struc.qtd,Struc.preco,"Nike",Struc.tipo );
-
-
-	//usando fclose para fechar o arquivo
-	fclose(pont_arq);*/
-
-	//fscanf();
-
-	//for (i = 0; v[i]; i++)
-	//insereArv23(Pai,&Raiz,v[i],&sobe);
-
-	printf(" impresos : \n");
-
-	imprimir(Raiz,0);
-
-
+				libera(caminho);
+				caminho = Alocar();
+			}
+			t_1 = clock() - t_1;
+			 printf("Tempo de busca na arvore: %lf\n", ((double)t_1)/((CLOCKS_PER_SEC/1000)));
+			break;
+		case 5:
+			caminho = Alocar();
+			printf("Digite codigo que deseja imprimir infos :");
+			scanf("%d",&valor);
+			buscaValor((&Raiz),valor,0,&Aux,caminho,1);
+			if(Aux != NULL){
+			
+				if((Aux)->Info1.cod == valor){
+					imprimirInfo((Aux)->Info1);
+				}else{
+					imprimirInfo((Aux)->Info2);
+				}
+				imprimirCaminho(caminho,valor);
+			}
+			libera(caminho);
+			caminho = Alocar();		
+			break;
+		case 6:
+			printf(" impresos : \n");
+			imprimir(Raiz,0);
+			break;
+		default:
+			break;
+		}
+		n = menu();
+	}
+	liberaArv(Raiz);
 
 	return 0;
 }

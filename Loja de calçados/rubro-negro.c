@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rubro.h"
+#include <time.h>
 
 #define RED 1
 #define BLACK 0
@@ -28,8 +28,13 @@ struct lista{
 };
 
 
+typedef struct no No;
+typedef struct calcados Cal;
+typedef struct lista Lis;
 
-No* alocar(){
+
+
+No* alocar_arv(){
 
     No *aux = (No*) malloc(sizeof(No));
 
@@ -62,31 +67,6 @@ No* rotaciona_direita(No* raiz){
     return aux;
 
 }
-No* move_2_esq_red(No* raiz){
-
-    troca_cor(raiz);
-    if(cor(raiz->dir->esq) == RED){
-        raiz->dir = rotaciona_direita(raiz->dir);
-        raiz = rotaciona_esquerda(raiz);
-        troca_cor(raiz);
-    }
-    return raiz;
-
-}
-
-No* move_2_dir_red(No* raiz){
-
-    troca_cor(raiz);
-    if(cor(raiz->esq->dir) == RED){
-        raiz->esq = rotaciona_direita(raiz->esq);
-        raiz = rotaciona_esquerda(raiz);
-        troca_cor(raiz);
-    }
-    return raiz;
-
-}
-
-
 int cor(No *raiz){
 
     int aux;
@@ -113,138 +93,6 @@ void troca_cor(No* raiz){
     }
 
 }
-
-No* procura_menor(No* raiz){
-
-    No* aux1 = raiz;
-    No* aux2 = raiz->esq;
-
-    while(aux2 != NULL){
-        aux1 = aux2;
-        aux2 = aux2->esq;
-    }
-
-    return aux1;
-
-}
-
-No* remove_menor(No* raiz){
-
-
-    if(raiz->esq == NULL){
-        free(raiz);
-        return NULL;
-    }
-
-    if(cor(raiz->esq) == BLACK && cor(raiz->esq->esq) == BLACK){
-        raiz = move_2_esq_red(raiz);
-    }
-
-    raiz->esq = remove_menor(raiz->esq);
-
-
-    return balancear(raiz);
-
-
-}
-
-
-No* balancear(No* raiz){
-
-    //nó vermelho é sempre filho à esquerda
-    if(cor(raiz->dir->esq) == RED){
-        raiz = rotaciona_esquerda(raiz);
-    }    
-    //Filho da direita e neto da esquerda são vermelhos
-    if(raiz->esq != NULL && cor(raiz->dir) == RED && cor(raiz->esq->esq) == RED){
-        raiz = rotaciona_direita(raiz); 
-    }
-    //2 filhos vermelhos: troca cor:
-    if(cor(raiz->esq) == RED && cor(raiz->dir) == RED){
-        troca_cor(raiz);
-        
-    }
-
-    return raiz;
-
-}
-
-int consulta_arvore(No* raiz, Cal calcado){
-
-    int flag = 0;
-
-    if(raiz != NULL){
-
-        if(raiz->valor.cod == calcado.cod){
-            flag = 1;
-        }
-
-        if(raiz->valor.cod > calcado.cod){
-            flag = consulta_arvore(raiz->esq, calcado);
-        }else{
-            flag = consulta_arvore(raiz->dir, calcado);
-        }
-    }
-
-    return flag;
-}
-
-
-No* remove_No(No* raiz, Cal calcado){
-
-    if(calcado.cod < raiz->valor.cod){
-        if(cor(raiz->esq) == BLACK && cor(raiz->esq->esq) == BLACK){
-            raiz = move_2_esq_red(raiz);
-        }
-        raiz->esq = remove_No(raiz->esq, calcado);
-    }else{
-
-        if(cor(raiz->esq) == RED){
-            raiz = rotaciona_direita(raiz);
-        }
-
-        if(calcado.cod == raiz->valor.cod && (raiz->dir == NULL)){
-            free(raiz);
-            return NULL;
-        }
-
-        if(cor(raiz->dir) == BLACK && cor(raiz->dir->esq) == BLACK){
-            raiz = move_2_dir_red(raiz);
-        }
-
-        if(calcado.cod == raiz->valor.cod){
-            No* aux = procura_menor(raiz->dir);
-            raiz->valor = aux->valor;
-            raiz->dir = remove_menor(raiz->dir);
-        }else{
-            raiz->dir = remove_No(raiz->dir, calcado);
-        }
-
-
-    }
-
-    return balancear(raiz);
-}
-
-
-
-int RemoveRubro(No **raiz, Cal calcado){
-
-    if(consulta_arvore(*raiz,calcado)){
-        No* aux = *raiz;
-        *raiz = remove_No(aux,calcado);
-        if(*raiz != NULL){
-            (*raiz)->cor = BLACK;
-        }
-
-        return 1;
-
-    }else{
-
-        return 0;
-    }
-}
-
 
 No* insere_no(No* no, Cal calcado, int *flag){
 
@@ -287,13 +135,9 @@ No* insere_no(No* no, Cal calcado, int *flag){
 
     }
 
-    
-      
-
     return no;
 
 }
-
 int insere_arv(No **raiz, Cal calcado){
 
     int flag;
@@ -306,44 +150,28 @@ int insere_arv(No **raiz, Cal calcado){
     return flag;
 
 }
-
-int atualizaTxt(Cal Calcado, int esc, Lis *LisEsp){
-
-	Lis *aux;
+int atualizaTxt(Cal Calcado, int esc){
 	FILE *pont;
 	char s[200];
-	int i = 0;
+	int i = 1;
 	if(esc == 1){
-        /*
-		pont = fopen("arquivo_palavra.txt", "r");
+		pont = fopen("arquivo_palavra.txt", "r+");
 		if(pont != NULL){
-			i = 0;
-			while( (fgets(s, 200, pont)) && i < Calcado.pos)
-					i++;
-			fprintf(pont,"%d %d %d %d %d %d",0,0,0,0,0,0);
-			InserirLista(LisEsp,Calcado.pos);
-		}
-        */
-	}else{
-		if(LisEsp != NULL){
-			pont = fopen("arquivo_palavra.txt", "r+");
-
-			if(pont != NULL){
-				i = 0;
-				while( (fgets(s, 200, pont)) && i < LisEsp->esp)
-					i++;
-
-				fprintf(pont, "%d %d %d %f %s %s",Calcado.cod,Calcado.tam,Calcado.qtd,Calcado.preco,Calcado.marca,Calcado.tipo );
-				aux = LisEsp;
-				LisEsp = LisEsp->prox;
-				free(aux);
+			i = 1;
+			while( i < Calcado.pos){
+				i++;
+				fgets(s,200, pont);
+				//printf("%d\n",l.cod);
 			}
+			printf("qtd = %d\n",Calcado.qtd);
+			fseek(pont,0,SEEK_CUR);
+			fprintf(pont, "%d %d %d %f %s %s",Calcado.cod,Calcado.tam,Calcado.qtd,Calcado.preco,Calcado.marca,Calcado.tipo );
+			//fscanf(pont, "%d %d %d %f %s %s",&l.cod,&l.tam,&l.qtd,&l.preco,l.marca,l.tipo );
 			
-		}else{
-            
-			pont = fopen("arquivo_palavra.txt", "a");
-			fprintf(pont, "%d %d %d %f %s %s\n\n",Calcado.cod,Calcado.tam,Calcado.qtd,Calcado.preco,Calcado.marca,Calcado.tipo);
 		}
+	}else{
+		pont = fopen("arquivo_palavra.txt", "a");
+		fprintf(pont,"%d %d %d %2f %s %s\n",Calcado.cod,Calcado.tam,Calcado.qtd,Calcado.preco,Calcado.marca,Calcado.tipo );
 	}
 
 	fclose(pont);
@@ -351,134 +179,263 @@ int atualizaTxt(Cal Calcado, int esc, Lis *LisEsp){
 
 
 
-
-
-
-void imprimir(No* arvore){//IMPRIMIR ARVORE
-
-    if( arvore != NULL){
-
-        imprimir(arvore->esq);
-        printf("%d ",arvore->valor.cod);
-        imprimir(arvore->dir);
-
-    }
-
+Lis* alocar_lis(){
+	Lis* caminho = malloc (sizeof (Lis));
+   	caminho->prox = NULL;
+	return caminho;
 }
 
-int vender_sapato(No* raiz, int cod, int flag){
+void InserirLista(Lis *LisEsp, int valor){
 
-    if(raiz != NULL){
-        
-        if(raiz->valor.cod == cod){
-            raiz->valor.qtd = raiz->valor.qtd - 1;
-            flag = 1;
-        }else{
-            flag = vender_sapato(raiz->esq,cod,flag);
-            flag = vender_sapato(raiz->dir,cod,flag);
+    Lis *nova = malloc (sizeof (Lis));
+    nova->esp = valor;
+    nova->prox = LisEsp->prox;
+	LisEsp->prox = nova;
+   
+}
+
+/*
+int buscaValor(No **Raiz, int valor, int m1, No **Aux, Lis *caminho){//BUSCAR O No DO NUMERO DADO
+
+	int flag = 0;
+    if(*Raiz != NULL){
+		InserirLista(caminho,m1);
+        if((*Raiz)->valor.cod == valor){
+			*Aux = *Raiz;
+			flag = 1;
+		}else{
+
+			if(valor < (*Raiz)->valor.cod){
+				flag = buscaValor(&(*Raiz)->esq,valor,1,&(*Aux),caminho);
+			}else{
+				flag = buscaValor(&(*Raiz)->dir,valor,2,&(*Aux),caminho);
+			}
+    	}
+	}
+
+	return flag;
+}
+
+*/
+int buscaValor(No **Raiz, int valor, int m1, No **Aux, Lis *caminho, int esc){//BUSCAR O No DO NUMERO DADO
+
+	int flag = 0;
+    if(*Raiz != NULL){
+
+		if(esc)
+			InserirLista(caminho,m1);
+
+        if((*Raiz)->valor.cod == valor || (*Raiz)->valor.cod == valor){
+			*Aux = *Raiz;
+			flag = 1;
+		}else{
+
+			if(valor < (*Raiz)->valor.cod){
+				flag = buscaValor(&(*Raiz)->esq,valor,1,&(*Aux),caminho,esc);
+			}else{
+				flag = buscaValor(&(*Raiz)->dir,valor,2,&(*Aux),caminho,esc);
+			}
+
         }
-
     }
 
-    return flag;
+	return flag;
+}
+
+void caminhoBusca(Lis *Lista,int valor){
+	Lis *p;
+	printf("Caminho pecorrido: \n");
+	printf("%d ->",valor);
+	for(p = Lista->prox; p != NULL; p = p->prox){
+			
+		if(p->esp == 1)
+			printf("Esquerda -> ");
+		else if(p->esp == 2)
+			printf("Direita -> ");
+		else
+			printf("Zero");
+	}
+	
+}
+
+void imprimirInfo(Cal Calcado){
+  
+    printf("Informações do calcado com cod: %d\n",Calcado.cod);
+    printf("Tamanho = %d\nQuantidade = %d\nPreco = %2.f\nMarca = %s\nTipo = %s\n",
+    Calcado.tam,Calcado.qtd,Calcado.preco,Calcado.marca,Calcado.tipo );
 
 }
 
+void liberaArv(No* Raiz){
+	if (Raiz != NULL){
+		liberaArv(Raiz->esq); /* libera sae */
+		liberaArv(Raiz->dir); /* libera sad */
+		free(Raiz); /* libera raiz */
+	}
+}
 
-int buscar(No* raiz, int cod, int flag){
-
-    if(raiz != NULL){
-        
-        if(raiz->valor.cod == cod){
-            flag = 1;
-            printf("quantidade de sapatos = %d \n",raiz->valor.qtd);
-
-        }else if(flag == 0){
-
-            printf("esquerda ");
-            flag = buscar(raiz->esq,cod,flag);
-            printf("direita ");
-            flag = buscar(raiz->dir,cod,flag);
-        }
-
-    }
-
-    return flag;
-
-
+void libera (Lis* lista)
+{
+	Lis* p = lista->prox, *aux;
+	while (p != NULL) {
+		aux = p->prox;
+		free(p); 
+		p = aux;
+	}
 
 }
-    
 
 int menu(){
 	int esc;
-	puts("\n1 - Gerar arvore");
-	puts("2 - Inserir elemento");
-	puts("3 - vender sapato");
-	puts("4 - Buscar elemento unico");
-	puts("5 - Para excluir");
+	puts("\n1 - Inserir elemento");
+	puts("2 - Vender elemento");
+	puts("3 - Atualizar elemento");
+	puts("4 - Busca varios elementos");
+	puts("5 - Imprimir Infos");
+	puts("0 - Sair");
 	scanf("%d",&esc);
 	return esc;
 }
 
 int main() {
 		
-	No* arvore = alocar();
-	Cal calcado;
-    Lis* lista;
+	No* arvore = alocar_arv();
+    No* aux = alocar_arv();
+    Cal  calcado;
+    int n, i = 1, valor, vlr, j = 0, v[100];
+    double t,t_1;
+    Lis *caminho = alocar_lis();
+    FILE *pont;
 
-    int escolha;
 
-    
+    n = menu();
 
-    do{
-        escolha = menu();
+    pont = fopen("arquivo_palavra.txt","r");
+    if(pont == NULL){
+        printf("Erro na abertura do arquivo!");
+    }
 
-        if(escolha == 1){
-            FILE *pont = fopen("arquivo_palavra.txt", "r");
-            int i = 1;
-            while(fscanf(pont, "%d %d %d %f %s %s",&calcado.cod,&calcado.tam,&calcado.qtd,&calcado.preco,calcado.marca,calcado.tipo) != EOF){
-                calcado.pos = i;
-                insere_arv(&arvore,calcado);
-                i++;
-            }
+    while(fscanf(pont, "%d %d %d %f %s %s",&calcado.cod,&calcado.tam,&calcado.qtd,&calcado.preco,calcado.marca,calcado.tipo) != EOF){
+        calcado.pos = i;
+        insere_arv(&arvore,calcado);
+        i++;
+        if(i % 2 != 0){
+            v[j] = calcado.cod;
+            j++;
+        }
+    }
+    fclose(pont);
 
-            fclose(pont);
+    while(n){
 
-        }if(escolha == 3){
-            int codigo;
-            printf("codigo do sapato: ");
-            scanf("%d",&codigo);
+        switch (n){
+        case 1:
+			printf("Para inserir calcado Digite (Apenas caracteres e numeros):\n");
+			printf("Codigo : ");
+			scanf("%d",&calcado.cod);
+			printf("Tamanho : ");
+			scanf("%d",&calcado.tam);
+			printf("Quantidade : ");
+			scanf("%d",&calcado.qtd);
+			printf("Preco : ");
+			scanf("%f",&calcado.preco);
+			printf("Marca : ");
+			scanf("%s",calcado.marca);
+			printf("Tipo : ");
+			scanf("%s",calcado.tipo);
+			calcado.pos = i;
+			i++;
+			insere_arv(&arvore,calcado);
+			atualizaTxt(calcado,2);
+			break;
 
-            if(vender_sapato(arvore,codigo,0)){
-                printf("Sapato vendido!\n");
-            }else{
-                printf("sapato nao encontrasse no estoque!\n");
-            }
-            
-            fseek(pont,0,SEEK_CUR);
-            atualizaTxt(calcado,2,lista);
+        case 2:
 
-        }if(escolha == 4){
-            int codigo;
-            printf("codigo do sapato que deseja buscar: ");
-            scanf("%d",&codigo);
+			printf("Digite codigo que deseja vender :");
+			scanf("%d",&valor);
+			buscaValor((&arvore),valor,0,&aux,caminho,0);
+			if(aux != NULL){
+				printf("Quantos calcados deseja vender :");
+				scanf("%d",&vlr);
+				if (vlr <= aux->valor.qtd){
+				
+					if((aux)->valor.cod == valor){
+						aux->valor.qtd -= vlr;
+						atualizaTxt((aux)->valor,1);
+					}
+				}else
+					printf("Produto sem estoque\n");
+			}else
+				printf("Calçado não cadastrado\n");
 
-            buscar(arvore,codigo,0);
-                
-         
-        }if(escolha == 5){
+			break;
 
-            int codigo;
-            printf("codigo do sapato que deseja buscar: ");
-            scanf("%d",&codigo);
+        case 3:
 
-            if(RemoveRubro(&arvore,calcado)){
-                printf("removido!\n");
-            }
+			printf("Para inserir calcado Digite (Apenas caracteres e numeros):\n");
+			printf("Codigo : ");
+			scanf("%d",&calcado.cod);
+			printf("Tamanho : ");
+			scanf("%d",&calcado.tam);
+			printf("Quantidade : ");
+			scanf("%d",&calcado.qtd);
+			printf("Preco : ");
+			scanf("%f",&calcado.preco);
+			printf("Marca : ");
+			scanf("%s",calcado.marca);
+			printf("Tipo : ");
+			scanf("%s",calcado.tipo);
+			buscaValor((&arvore),calcado.cod,0,&aux,caminho,0);
+			if(aux != NULL){
+				if((aux)->valor.cod == valor){
+					atualizaTxt((aux)->valor,1);
+				}
+			}
+			break;
+
+        case 4:
+
+			printf("Quantas numeros deseja pesquisa (1 - 60):\n");
+			scanf("%d",&valor);
+			t_1 = clock();
+			for(j = 0; j < valor; j ++){
+				buscaValor((&arvore),v[j],0,&aux,caminho,1);
+				caminhoBusca(caminho,v[j]);
+
+				libera(caminho);
+				caminho = alocar_lis();
+				
+			}
+			t_1 = clock() - t_1;
+			printf("\nTempo de busca na arvore: %lf\n", ((double)t_1)/((CLOCKS_PER_SEC/1000)));
+			break;
+        
+        case 5:
+
+			printf("Digite codigo que deseja imprimir infos :");
+			scanf("%d",&valor);
+			buscaValor((&arvore),valor,0,&aux,caminho,1);
+			if(aux != NULL){
+				if((aux)->valor.cod == valor){
+					imprimirInfo((aux)->valor);
+				}else{
+					imprimirInfo((aux)->valor);
+				}
+				caminhoBusca(caminho,valor);
+			}
+			libera(caminho);
+			caminho = alocar_lis();	
+						
+			break;
+        
+        default:
+            break;
         }
 
-    }while(1);
+        n = menu();
+    }
+
+	liberaArv(arvore);
 
       
 	return 0;

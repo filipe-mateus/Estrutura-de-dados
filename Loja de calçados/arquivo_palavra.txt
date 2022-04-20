@@ -1,6 +1,6 @@
 11111 42 10 679.00 Nike tenis_Air_Max_97
 11112 40 10 589.99 Nike NikeCourt_lite_2
-11113 41 10 899.99 Nike Air_Force_1
+11113 41 6 899.989990 Nike Air_Forceorcee
 11114 40 10 419.88 Nike Court_Vision_Low
 11115 40 10 309.99 Nike AD_Comfort
 11116 41 10 359.99 Nike Court_Vision_Mid
@@ -121,4 +121,10 @@
 41161 24 10 259.90 Puma Suede_Mid_XXI_kids
 41171 25 10 239.90 Puma Prowl_SlipOn_kids
 41181 26 10 199.90 Puma Ralph_Sampson_Lo_kids
-41191 26 10 259.90 Puma Anzarun_Lite_kids  
+41191 26 10 259.90 Puma Anzarun_Lite_kids
+22222 40 10 100 Nike nke_shoes
+22221 40 10 100 Nike shoes_1
+22223 40 10 101 Nike Court_nike
+22224 40 10 120.199997 Nike Mercurial
+22226 40 10 200.000000 Nike shots
+33333 40 10 100.000000 Nike shoes
